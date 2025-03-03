@@ -23,10 +23,11 @@ hydration reminders, and seamless social integration to keep users motivated.
 
 # Objectives and Scope of the Project
 ## Objectives:
-	To develop a cross-platform fitness tracking application that monitors steps, calories burned, workout routines, diet, and water intake.
+	To develop a cross-platform fitness tracking application that monitors steps, calories 
+ 	burned, workout routines, diet, and water intake.
 	To integrate Google Fit API and Apple HealthKit for real-time fitness data.
-    To provide AI-based insights and recommendations to improve fitness habits.
-    To implement social sharing and community features to keep users engaged.
+    	To provide AI-based insights and recommendations to improve fitness habits.
+    	To implement social sharing and community features to keep users engaged.
 
 ## Scope:
 	Suitable for individuals looking to maintain or improve their fitness.

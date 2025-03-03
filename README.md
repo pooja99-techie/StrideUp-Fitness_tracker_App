@@ -76,8 +76,6 @@ hydration reminders, and seamless social integration to keep users motivated.
 	Firebase Test Lab (for device compatibility testing).
 	Selenium / Appium (for UI testing of mobile app).
 
- 
-
 # Contribution / Value Addition of the Project
 	Holistic Fitness Management: Unlike existing apps, this app integrates workout tracking, 
     diet planning, hydration monitoring, and social engagement in a single platform.
@@ -104,8 +102,6 @@ StrideUp is a feature-rich application aimed at improving users' health and fitn
 real-time tracking, AI-based insights, and social motivation. The use of Google Fit API and Apple 
 HealthKit ensures reliable data collection, while smart reminders and gamification elements help 
 users stay consistent in their fitness journey.
-
- 
 
 ## Future Scope:
 	Machine Learning Integration: Advanced health insights and predictive fitness trends.

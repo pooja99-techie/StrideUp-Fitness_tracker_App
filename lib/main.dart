@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:strideup_fitness_app/common/colo_extension.dart';
-import 'package:strideup_fitness_app/view/on_boarding/on_boarding_view.dart';
+// import 'package:strideup_fitness_app/view/on_boarding/on_boarding_view.dart';
+
 import 'package:strideup_fitness_app/view/on_boarding/started_view.dart';
 
 void main() {

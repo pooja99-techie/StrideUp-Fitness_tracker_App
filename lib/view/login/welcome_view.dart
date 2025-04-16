@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strideup_fitness_app/view/main_tab/main_tab_view.dart';
 
 import '../../common/colo_extension.dart';
 import '../../common_widget/round_button.dart';
@@ -51,10 +52,10 @@ class _WelcomeViewState extends State<WelcomeView> {
               RoundButton(
                   title: "Go To Home",
                   onPressed: () {
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => const MainTabView()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const MainTabView()));
                   }),
             ],
           ),

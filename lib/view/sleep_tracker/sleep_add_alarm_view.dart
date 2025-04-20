@@ -16,7 +16,6 @@ class SleepAddAlarmView extends StatefulWidget {
 }
 
 class _SleepAddAlarmViewState extends State<SleepAddAlarmView> {
-
   bool positive = false;
 
   @override
@@ -77,141 +76,134 @@ class _SleepAddAlarmViewState extends State<SleepAddAlarmView> {
       backgroundColor: TColor.white,
       body: Container(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-
-
-          const SizedBox(
-            height: 8,
-          ),
-          IconTitleNextRow(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            IconTitleNextRow(
               icon: "assets/img/Bed_Add.png",
               title: "Bedtime",
               time: "09:00 PM",
               color: TColor.lightGray,
-              onPressed: () {}),
-          const SizedBox(
-            height: 10,
-          ),
-          IconTitleNextRow(
+              onPressed: () {},
+            ),
+            const SizedBox(height: 10),
+            IconTitleNextRow(
               icon: "assets/img/HoursTime.png",
               title: "Hours of sleep",
               time: "8hours 30minutes",
               color: TColor.lightGray,
-              onPressed: () {}),
-          const SizedBox(
-            height: 10,
-          ),
-          IconTitleNextRow(
+              onPressed: () {},
+            ),
+            const SizedBox(height: 10),
+            IconTitleNextRow(
               icon: "assets/img/Repeat.png",
               title: "Repeat",
               time: "Mon to Fri",
               color: TColor.lightGray,
-              onPressed: () {}),
-          const SizedBox(
-            height: 10,
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: TColor.lightGray,
-              borderRadius: BorderRadius.circular(15),
+              onPressed: () {},
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                const SizedBox(width: 15,),
-                Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    "assets/img/Vibrate.png",
-                    width: 18,
-                    height: 18,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Vibrate When Alarm Sound",
-                    style: TextStyle(color: TColor.gray, fontSize: 12),
-                  ),
-                ),
-
-
-                SizedBox(
-                  height: 30,
-                  child: Transform.scale(
-                    scale: 0.7,
-                    child: CustomAnimatedToggleSwitch<bool>(
-                      current: positive,
-                      values: [false, true],
-                      // dif: 0.0,
-                      indicatorSize: const Size.square(30.0),
-                      animationDuration: const Duration(milliseconds: 200),
-                      animationCurve: Curves.linear,
-                      onChanged: (b) => setState(() => positive = b),
-                      iconBuilder: (context, local, global) {
-                        return const SizedBox();
-                      },
-                      // defaultCursor: SystemMouseCursors.click,
-                      iconsTappable: false,
-                      // onTap: () => setState(() => positive = !positive);,
-                      wrapperBuilder: (context, global, child) {
-                        return Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned(
-                                left: 10.0,
-                                right: 10.0,
-                                height: 30.0,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                        colors: TColor.secondaryG),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(50.0)),
-                                  ),
-                                )),
-                            child,
-                          ],
-                        );
-                      },
-                      foregroundIndicatorBuilder: (context, global) {
-                        return SizedBox.fromSize(
-                          size: const Size(10, 10),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: TColor.white,
-                              borderRadius:
-                              const BorderRadius.all(Radius.circular(50.0)),
-                              boxShadow: const [
-                                BoxShadow(
-                                    color: Colors.black38,
-                                    spreadRadius: 0.05,
-                                    blurRadius: 1.1,
-                                    offset: Offset(0.0, 0.8))
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: TColor.lightGray,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 15),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    child: Image.asset(
+                      "assets/img/Vibrate.png",
+                      width: 18,
+                      height: 18,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                )
-
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Vibrate When Alarm Sound",
+                      style: TextStyle(color: TColor.gray, fontSize: 12),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 30,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: CustomAnimatedToggleSwitch<bool>(
+                          current: positive,
+                          values: [false, true],
+                          indicatorSize: const Size.square(30.0),
+                          animationDuration: const Duration(milliseconds: 200),
+                          animationCurve: Curves.linear,
+                          onChanged: (b) => setState(() => positive = b),
+                          iconBuilder: (context, local, global) {
+                            return const SizedBox();
+                          },
+                          onTap: (info) =>
+                              setState(() => positive = !positive),
+                          iconsTappable: false,
+                          wrapperBuilder: (context, global, child) {
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned(
+                                  left: 10.0,
+                                  right: 10.0,
+                                  height: 30.0,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                          colors: TColor.secondaryG),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(50.0)),
+                                    ),
+                                  ),
+                                ),
+                                child,
+                              ],
+                            );
+                          },
+                          foregroundIndicatorBuilder: (context, global) {
+                            return SizedBox.fromSize(
+                              size: const Size(10, 10),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: TColor.white,
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(50.0)),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black38,
+                                      spreadRadius: 0.05,
+                                      blurRadius: 1.1,
+                                      offset: Offset(0.0, 0.8),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
-          ),
-          const Spacer(),
-          RoundButton(title: "Add", onPressed: () {}),
-          const SizedBox(
-            height: 20,
-          ),
-        ]),
+            const Spacer(),
+            RoundButton(title: "Add", onPressed: () {}),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

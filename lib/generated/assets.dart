@@ -48,7 +48,7 @@ class Assets {
   static const String imgFlour = 'assets/img/flour.png';
   static const String imgFoot = 'assets/img/foot.png';
   static const String imgGender = 'assets/img/gender.png';
-  static const String imgGlassOfMilk 1 = 'assets/img/glass-of-milk 1.png';
+  static const String imgGlassOfMilk1 = 'assets/img/glass-of-milk 1.png';
   static const String imgGoal1 = 'assets/img/goal_1.png';
   static const String imgGoal2 = 'assets/img/goal_2.png';
   static const String imgGoal3 = 'assets/img/goal_3.png';
@@ -62,7 +62,7 @@ class Assets {
   static const String imgImg2 = 'assets/img/img_2.png';
   static const String imgLock = 'assets/img/lock.png';
   static const String imgM1 = 'assets/img/m_1.png';
-  static const String imgM2 (2) = 'assets/img/m_2 (2).png';
+  static const String imgM2 = 'assets/img/m_2.png';
   static const String imgM3 = 'assets/img/m_3.png';
   static const String imgM4 = 'assets/img/m_4.png';
   static const String imgMoreBtn = 'assets/img/more_btn.png';

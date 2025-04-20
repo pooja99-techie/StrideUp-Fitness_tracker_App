@@ -3,6 +3,8 @@ import 'package:strideup_fitness_app/common_widget/round_button.dart';
 import 'package:strideup_fitness_app/view/workout_tracker/workout_tracker_view.dart';
 import 'package:flutter/material.dart';
 
+import '../meal_planner/meal_planner_view.dart';
+
 // import '../sleep_tracker/sleep_tracker_view.dart';
 
 class SelectView extends StatelessWidget {
@@ -34,12 +36,12 @@ class SelectView extends StatelessWidget {
             RoundButton(
                 title: "Meal Planner",
                 onPressed: () {
-                  // Navigator.push(
-                  // context,
-                  // MaterialPageRoute(
-                  //   builder: (context) => const MealPlannerView(),
-                  // ),
-                  // );
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MealPlannerView(),
+                  ),
+                  );
                 }),
             const SizedBox(
               height: 15,

@@ -4,7 +4,7 @@ import 'package:readmore/readmore.dart';
 import '../../common/colo_extension.dart';
 import '../../common_widget/food_step_detail_row.dart';
 import '../../common_widget/round_button.dart';
-import 'meal_schedule_view.dart';
+// import 'meal_schedule_view.dart';
 
 class FoodInfoDetailsView extends StatefulWidget {
   final Map mObj;
@@ -45,12 +45,12 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
     {
       "no": "3",
       "detail":
-      "In a seperate place, mix the eggs and liquid milk until blended"
+          "In a seperate place, mix the eggs and liquid milk until blended"
     },
     {
       "no": "4",
       "detail":
-      "Put the egg and milk mixture into the dry ingredients, Stir untul smooth and smooth"
+          "Put the egg and milk mixture into the dry ingredients, Stir untul smooth and smooth"
     },
     {"no": "5", "detail": "Prepare all of the ingredients that needed"},
   ];
@@ -60,7 +60,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
     var media = MediaQuery.of(context).size;
     return Container(
       decoration:
-      BoxDecoration(gradient: LinearGradient(colors: TColor.primaryG)),
+          BoxDecoration(gradient: LinearGradient(colors: TColor.primaryG)),
       child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -128,7 +128,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                         decoration: BoxDecoration(
                           color: Colors.white24,
                           borderRadius:
-                          BorderRadius.circular(media.width * 0.275),
+                              BorderRadius.circular(media.width * 0.275),
                         ),
                       ),
                     ),
@@ -243,7 +243,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                                   margin: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 4),
                                   padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                                      const EdgeInsets.symmetric(horizontal: 8),
                                   decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
@@ -255,7 +255,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.center,
+                                        CrossAxisAlignment.center,
                                     children: [
                                       Image.asset(
                                         nObj["image"].toString(),
@@ -329,7 +329,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                               child: Text(
                                 "${stepArr.length} Items",
                                 style:
-                                TextStyle(color: TColor.gray, fontSize: 12),
+                                    TextStyle(color: TColor.gray, fontSize: 12),
                               ),
                             )
                           ],
@@ -346,12 +346,12 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                               var nObj = ingredientsArr[index] as Map? ?? {};
                               return Container(
                                   margin:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                                      const EdgeInsets.symmetric(horizontal: 4),
                                   width: media.width * 0.23,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: media.width * 0.23,
@@ -359,7 +359,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                                         decoration: BoxDecoration(
                                             color: TColor.lightGray,
                                             borderRadius:
-                                            BorderRadius.circular(10)),
+                                                BorderRadius.circular(10)),
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           nObj["image"].toString(),
@@ -402,7 +402,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                               child: Text(
                                 "${stepArr.length} Steps",
                                 style:
-                                TextStyle(color: TColor.gray, fontSize: 12),
+                                    TextStyle(color: TColor.gray, fontSize: 12),
                               ),
                             )
                           ],
@@ -437,9 +437,7 @@ class _FoodInfoDetailsViewState extends State<FoodInfoDetailsView> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: RoundButton(
                             title: "Add to ${widget.mObj["name"]} Meal",
-                            onPressed: () {
-
-                            }),
+                            onPressed: () {}),
                       ),
                     ],
                   ),

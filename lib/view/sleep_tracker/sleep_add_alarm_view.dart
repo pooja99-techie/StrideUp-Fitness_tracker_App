@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../common/colo_extension.dart';
-import '../../common/common.dart';
+// import '../../common/common.dart';
 import '../../common_widget/icon_title_next_row.dart';
 import '../../common_widget/round_button.dart';
 
@@ -20,6 +20,7 @@ class _SleepAddAlarmViewState extends State<SleepAddAlarmView> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     var media = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -148,8 +149,7 @@ class _SleepAddAlarmViewState extends State<SleepAddAlarmView> {
                           iconBuilder: (context, local, global) {
                             return const SizedBox();
                           },
-                          onTap: (info) =>
-                              setState(() => positive = !positive),
+                          onTap: (info) => setState(() => positive = !positive),
                           iconsTappable: false,
                           wrapperBuilder: (context, global, child) {
                             return Stack(

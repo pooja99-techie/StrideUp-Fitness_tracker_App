@@ -49,12 +49,12 @@ class SelectView extends StatelessWidget {
             RoundButton(
                 title: "Sleep Tracker",
                 onPressed: () {
-                  // Navigator.push(
-                  // context,
-                  // MaterialPageRoute(
-                  //   builder: (context) => const SleepTrackerView(),
-                  // ),
-                  // );
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SleepTrackerView(),
+                  ),
+                  );
                 })
           ],
         ),

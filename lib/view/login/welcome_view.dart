@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:strideup_fitness_app/view/main_tab/main_tab_view.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <-- Import this package
 
 import '../../common/colo_extension.dart';
 import '../../common_widget/round_button.dart';
@@ -12,9 +13,19 @@ class WelcomeView extends StatefulWidget {
 }
 
 class _WelcomeViewState extends State<WelcomeView> {
+  // We don't strictly need to fetch the user here,
+  // we can access it directly in the build method.
+
   @override
   Widget build(BuildContext context) {
     var media = MediaQuery.of(context).size;
+
+    // Get the current user from Firebase Authentication
+    // The `?` makes it null-safe in case currentUser is null
+    // The `?? 'User'` provides a default name if displayName is null
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userName = currentUser?.displayName ?? 'User'; // Use a default if display name is not set
+
     return Scaffold(
       backgroundColor: TColor.white,
       body: SafeArea(
@@ -36,8 +47,9 @@ class _WelcomeViewState extends State<WelcomeView> {
               SizedBox(
                 height: media.width * 0.1,
               ),
+              // Use the dynamic userName here
               Text(
-                "Welcome, Stefani",
+                "Welcome, $userName", // <-- Changed this line
                 style: TextStyle(
                     color: TColor.black,
                     fontSize: 20,

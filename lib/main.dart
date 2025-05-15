@@ -4,8 +4,18 @@ import 'package:strideup_fitness_app/common/colo_extension.dart';
 
 import 'package:strideup_fitness_app/view/on_boarding/started_view.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'package:firebase_core/firebase_core.dart'; // Import the firebase_core package
+import 'firebase_options.dart';
+
+Future<void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Now you can run your Flutter app
+  runApp(const MyApp()); // Replace MyA
 }
 
 class MyApp extends StatelessWidget {

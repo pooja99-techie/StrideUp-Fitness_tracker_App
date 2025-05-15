@@ -1,10 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:strideup_fitness_app/view/login/login_view.dart';
+import 'package:strideup_fitness_app/view/profile/edit_profile_view.dart';
 
 import '../../common/colo_extension.dart';
 import '../../common_widget/round_button.dart';
 import '../../common_widget/setting_row.dart';
 import '../../common_widget/title_subtitle_cell.dart';
-import 'package:animated_toggle_switch/animated_toggle_switch.dart';
+// import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -15,6 +19,10 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   bool positive = false;
+
+  String _height = 'Loading...';
+  String _weight = 'Loading...';
+  String _dateOfBirth = 'Loading...';
 
   List accountArr = [
     {"image": "assets/img/p_personal.png", "name": "Personal Data", "tag": "1"},
@@ -36,8 +44,107 @@ class _ProfileViewState extends State<ProfileView> {
     {"image": "assets/img/p_privacy.png", "name": "Privacy Policy", "tag": "6"},
     {"image": "assets/img/p_setting.png", "name": "Setting", "tag": "7"},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch user data when the widget is initialized
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    print('DEBUG: _fetchUserData started'); // Print at the very beginning
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      print('DEBUG: User is logged in with UID: ${currentUser.uid}'); // Print if user exists
+
+      try {
+        print('DEBUG: Attempting to fetch document for UID: ${currentUser.uid}'); // Print before the fetch
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        print('DEBUG: Firestore fetch operation completed'); // Print after the fetch
+
+        if (userDoc.exists) {
+          print('DEBUG: User document found in Firestore.'); // Print if document exists
+          Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+          print('DEBUG: Fetched raw user data: $data'); // Print the raw data map
+
+          setState(() {
+            print('DEBUG: Inside setState - updating state variables'); // Print inside setState
+
+            final fetchedHeight = data['height'];
+            final fetchedWeight = data['weight'];
+            final fetchedDateOfBirth = data['dateOfBirth']; // Fetch dateOfBirth for age
+
+            _height = fetchedHeight != null ? fetchedHeight.toString() : 'Height Missing';
+            _weight = fetchedWeight != null ? fetchedWeight.toString() : 'Weight Missing';
+            // Basic age calculation (more robust logic needed for a real app)
+            if (fetchedDateOfBirth != null && fetchedDateOfBirth is String) {
+              try {
+                final parts = fetchedDateOfBirth.split('/'); // Assuming "MM/DD/YYYY"
+                if(parts.length == 3) {
+                  final month = int.parse(parts[0]);
+                  final day = int.parse(parts[1]);
+                  final year = int.parse(parts[2]);
+                  final dateOfBirth = DateTime(year, month, day);
+                  final today = DateTime.now();
+                  int age = today.year - dateOfBirth.year;
+                  if (today.month < dateOfBirth.month || (today.month == dateOfBirth.month && today.day < dateOfBirth.day)) {
+                    age--;
+                  }
+                  _dateOfBirth = age.toString();
+                } else {
+                  _dateOfBirth = 'Invalid Date Format';
+                }
+              } catch(e) {
+                _dateOfBirth = 'Age Calc Error';
+                print('DEBUG: Error calculating age: $e');
+              }
+            } else {
+              _dateOfBirth = 'Date Missing';
+            }
+
+
+            print('DEBUG: State variables updated: Height=$_height, Weight=$_weight, Age=$_dateOfBirth'); // Print updated state
+
+          });
+          print('DEBUG: setState completed'); // Print after setState block
+        } else {
+          print('DEBUG: User document NOT found in Firestore for UID: ${currentUser.uid}'); // Print if document NOT found
+          setState(() {
+            _height = 'Not set';
+            _weight = 'Not set';
+            _dateOfBirth = 'Not set';
+          });
+        }
+      } catch (e) {
+        print('DEBUG: *** ERROR fetching user data: $e ***'); // Print if an error occurs
+        setState(() {
+          _height = 'Error';
+          _weight = 'Error';
+          _dateOfBirth = 'Error';
+        });
+      }
+    } else {
+      print('DEBUG: No user logged in when _fetchUserData was called.'); // Print if no user
+      setState(() {
+        _height = 'N/A';
+        _weight = 'N/A';
+        _dateOfBirth = 'N/A';
+      });
+    }
+    print('DEBUG: _fetchUserData finished'); // Print at the very end
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userName = currentUser?.displayName ?? 'User';
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: TColor.white,
@@ -51,7 +158,23 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         actions: [
           InkWell(
-            onTap: () {},
+            onTap: () async { // Make the function async
+              try {
+                await FirebaseAuth.instance.signOut();
+
+                // Navigate to the LoginView screen using MaterialPageRoute
+                // and remove all other routes from the stack.
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => LoginView()), // <-- Create the route for your LoginView
+                      (Route<dynamic> route) => false, // <-- This predicate removes all routes below the new one
+                );
+
+                print("User signed out and navigated to login!"); // Optional: print statement
+              } catch (e) {
+                print("Error signing out: $e");
+                // Optionally show an error message to the user
+              }
+            },
             child: Container(
               margin: const EdgeInsets.all(8),
               height: 40,
@@ -96,7 +219,7 @@ class _ProfileViewState extends State<ProfileView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Stefani Wong",
+                          "$userName",
                           style: TextStyle(
                             color: TColor.black,
                             fontSize: 14,
@@ -122,12 +245,12 @@ class _ProfileViewState extends State<ProfileView> {
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       onPressed: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => const ActivityTrackerView(),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfileView(),
+                          ),
+                        );
                       },
                     ),
                   )
@@ -136,29 +259,29 @@ class _ProfileViewState extends State<ProfileView> {
               const SizedBox(
                 height: 15,
               ),
-              const Row(
+              Row( // Removed const from here because child widgets will be dynamic
                 children: [
                   Expanded(
                     child: TitleSubtitleCell(
-                      title: "180cm",
+                      title: "$_height cm", // Use the state variable for height
                       subtitle: "Height",
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 15,
                   ),
                   Expanded(
                     child: TitleSubtitleCell(
-                      title: "65kg",
+                      title: "$_weight kg", // Use the state variable for weight
                       subtitle: "Weight",
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 15,
                   ),
                   Expanded(
                     child: TitleSubtitleCell(
-                      title: "22yo",
+                      title: "$_dateOfBirth yo", // Use the state variable for age
                       subtitle: "Age",
                     ),
                   ),
@@ -209,117 +332,7 @@ class _ProfileViewState extends State<ProfileView> {
               const SizedBox(
                 height: 25,
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                decoration: BoxDecoration(
-                    color: TColor.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black12, blurRadius: 2)
-                    ]),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Notification",
-                      style: TextStyle(
-                        color: TColor.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 8,
-                    ),
-                    SizedBox(
-                      height: 30,
-                      child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Image.asset("assets/img/p_notification.png",
-                                height: 15, width: 15, fit: BoxFit.contain),
-                            const SizedBox(
-                              width: 15,
-                            ),
-                            Expanded(
-                              child: Text(
-                                "Pop-up Notification",
-                                style: TextStyle(
-                                  color: TColor.black,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            CustomAnimatedToggleSwitch<bool>(
-                              current: positive,
-                              values: [false, true],
-                              // dif: 0.0,
-                              indicatorSize: Size.square(30.0),
-                              animationDuration:
-                                  const Duration(milliseconds: 200),
-                              animationCurve: Curves.linear,
-                              onChanged: (b) => setState(() => positive = b),
-                              iconBuilder: (context, local, global) {
-                                return const SizedBox();
-                              },
-                              // defaultCursor: SystemMouseCursors.click,
 
-                              // onTap: () => setState(() => positive = !positive),
-                              onTap: (info) {
-                                setState(() {
-                                  positive =
-                                      !positive; // Toggle the value of 'positive'
-                                });
-                              },
-
-                              iconsTappable: false,
-                              wrapperBuilder: (context, global, child) {
-                                return Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Positioned(
-                                        left: 10.0,
-                                        right: 10.0,
-                                        height: 30.0,
-                                        child: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                                colors: TColor.secondaryG),
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                                    Radius.circular(50.0)),
-                                          ),
-                                        )),
-                                    child,
-                                  ],
-                                );
-                              },
-                              foregroundIndicatorBuilder: (context, global) {
-                                return SizedBox.fromSize(
-                                  size: const Size(10, 10),
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: TColor.white,
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(50.0)),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                            color: Colors.black38,
-                                            spreadRadius: 0.05,
-                                            blurRadius: 1.1,
-                                            offset: Offset(0.0, 0.8))
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ]),
-                    )
-                  ],
-                ),
-              ),
               const SizedBox(
                 height: 25,
               ),

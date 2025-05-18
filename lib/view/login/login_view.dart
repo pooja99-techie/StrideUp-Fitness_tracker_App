@@ -7,6 +7,7 @@ import 'package:strideup_fitness_app/view/login/complete_profile_view.dart'; // 
 // Import firebase_auth
 import 'package:firebase_auth/firebase_auth.dart';
 
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -134,20 +135,24 @@ class _LoginViewState extends State<LoginView> {
                 const SizedBox(height: 50), // Adjusted height for spacing
 
                 RoundTextField(
-                  controller: _emailController, // Link controller
-                  hitText: "Email",
-                  icon: "assets/img/email.png",
-                  keyboardType: TextInputType.emailAddress,
+                    hitText: "Email",
+                    icon: "assets/img/email.png",
+                    keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
+
                 ),
+
+
                 SizedBox(
                   height: media.width * 0.04,
                 ),
+
                 RoundTextField(
-                  controller: _passwordController, // Link controller
+                  controller: _passwordController,
                   hitText: "Password",
                   icon: "assets/img/lock.png",
                   obscureText: true,
-                  rigtIcon: TextButton(
+                  rightIcon: TextButton(
                       onPressed: () {
                         // TODO: Implement show/hide password functionality
                       },
@@ -163,6 +168,8 @@ class _LoginViewState extends State<LoginView> {
                             color: TColor.gray,
                           ))),
                 ),
+
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,6 +188,8 @@ class _LoginViewState extends State<LoginView> {
                   ],
                 ),
                 const Spacer(),
+
+
                 RoundButton(
                     title: "Login",
                     onPressed:

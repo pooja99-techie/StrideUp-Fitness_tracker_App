@@ -1,10 +1,33 @@
-import 'package:calendar_agenda/calendar_agenda.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
-
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:strideup_fitness_app/view/meal_planner/meal_form.dart';
 import '../../common/colo_extension.dart';
-import '../../common_widget/meal_food_schedule_row.dart';
-import '../../common_widget/nutritions_row.dart';
+import '../../models/meal_models.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Calendar App',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: TColor.secondaryColor2,
+          primary: TColor.secondaryColor2,
+        ),
+        useMaterial3: true,
+      ),
+      home: const MealScheduleView(),
+    );
+  }
+}
 
 class MealScheduleView extends StatefulWidget {
   const MealScheduleView({super.key});
@@ -14,80 +37,106 @@ class MealScheduleView extends StatefulWidget {
 }
 
 class _MealScheduleViewState extends State<MealScheduleView> {
-  CalendarAgendaController _calendarAgendaControllerAppBar =
-  CalendarAgendaController();
-
-  late DateTime _selectedDateAppBBar;
-
-  List breakfastArr = [
-    {
-      "name": "Honey Pancake",
-      "time": "07:00am",
-      "image": "assets/img/honey_pan.png"
-    },
-    {"name": "Coffee", "time": "07:30am", "image": "assets/img/coffee.png"},
-  ];
-
-  List lunchArr = [
-    {
-      "name": "Chicken Steak",
-      "time": "01:00pm",
-      "image": "assets/img/chicken.png"
-    },
-    {
-      "name": "Milk",
-      "time": "01:20pm",
-      "image": "assets/img/glass-of-milk 1.png"
-    },
-  ];
-  List snacksArr = [
-    {"name": "Orange", "time": "04:30pm", "image": "assets/img/orange.png"},
-    {
-      "name": "Apple Pie",
-      "time": "04:40pm",
-      "image": "assets/img/apple_pie.png"
-    },
-  ];
-  List dinnerArr = [
-    {"name": "Salad", "time": "07:10pm", "image": "assets/img/salad.png"},
-    {"name": "Oatmeal", "time": "08:10pm", "image": "assets/img/oatmeal.png"},
-  ];
-
-  List nutritionArr = [
-    {
-      "title": "Calories",
-      "image": "assets/img/burn.png",
-      "unit_name": "kCal",
-      "value": "350",
-      "max_value": "500",
-    },
-    {
-      "title": "Proteins",
-      "image": "assets/img/proteins.png",
-      "unit_name": "g",
-      "value": "300",
-      "max_value": "1000",
-    },
-    {
-      "title": "Fats",
-      "image": "assets/img/egg.png",
-      "unit_name": "g",
-      "value": "140",
-      "max_value": "1000",
-    },
-    {
-      "title": "Carbo",
-      "image": "assets/img/carbo.png",
-      "unit_name": "g",
-      "value": "140",
-      "max_value": "1000",
-    },
-  ];
+  late DateTime _selectedDate;
+  late List<DateTime> _weekDates;
+  List<Meal> _meals = []; // List to hold meals for the selected date
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedDateAppBBar = DateTime.now();
+    _selectedDate = DateTime.now();
+    _generateWeekDates();
+    _fetchMeals(); // Fetch meals when the view is initialized
+  }
+
+  void _generateWeekDates() {
+    DateTime startOfWeek = _selectedDate.subtract(
+      Duration(days: _selectedDate.weekday - 1),
+    );
+
+    _weekDates = List.generate(
+      7,
+          (index) => startOfWeek.add(Duration(days: index)),
+    );
+  }
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+      _fetchMeals(); // Fetch meals for the selected date
+    });
+  }
+
+  void _nextWeek() {
+    setState(() {
+      _selectedDate = _selectedDate.add(const Duration(days: 7));
+      _generateWeekDates();
+      _fetchMeals(); // Fetch meals for the new selected date
+    });
+  }
+
+  void _previousWeek() {
+    setState(() {
+      _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+      _generateWeekDates();
+      _fetchMeals(); // Fetch meals for the new selected date
+    });
+  }
+
+  Future<void> _fetchMeals() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _meals = [];
+        _loading = false;
+      });
+      return; // Ensure user is logged in
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    final startOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('meals')
+          .where('dateTime', isGreaterThanOrEqualTo: startOfDay, isLessThan: endOfDay)
+          .orderBy('dateTime')
+          .get();
+
+      setState(() {
+        _meals = snapshot.docs.map((doc) {
+          final data = doc.data();
+          return Meal(
+            mealType: data['mealType'],
+            dateTime: (data['dateTime'] as Timestamp).toDate(),
+            foodItems: (data['foodItems'] as List<dynamic>)
+                .map((item) => FoodItem(
+              name: item['name'],
+              calories: item['calories'],
+              quantity: item['quantity'],
+            ))
+                .toList(),
+            totalCalories: data['totalCalories'],
+          );
+        }).toList();
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _meals = [];
+        _loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading meals: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -119,7 +168,7 @@ class _MealScheduleViewState extends State<MealScheduleView> {
           ),
         ),
         title: Text(
-          "Meal  Schedule",
+          "Meal Schedule",
           style: TextStyle(
               color: TColor.black, fontSize: 16, fontWeight: FontWeight.w700),
         ),
@@ -145,239 +194,299 @@ class _MealScheduleViewState extends State<MealScheduleView> {
         ],
       ),
       backgroundColor: TColor.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildDateSelector(),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _meals.isEmpty
+                  ? _buildEmptyState()
+                  : _buildMealList(),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
-          CalendarAgenda(
-            controller: _calendarAgendaControllerAppBar,
-            appbar: false,
-            selectedDayPosition: SelectedDayPosition.center,
-            leading: IconButton(
-                onPressed: () {},
-                icon: Image.asset(
-                  "assets/img/ArrowLeft.png",
-                  width: 15,
-                  height: 15,
-                )),
-            training: IconButton(
-                onPressed: () {},
-                icon: Image.asset(
-                  "assets/img/ArrowRight.png",
-                  width: 15,
-                  height: 15,
-                )),
-            weekDay: WeekDay.short,
-            dayNameFontSize: 12,
-            dayNumberFontSize: 16,
-            dayBGColor: Colors.grey.withOpacity(0.15),
-            titleSpaceBetween: 15,
-            backgroundColor: Colors.transparent,
-            // fullCalendar: false,
-            fullCalendarScroll: FullCalendarScroll.horizontal,
-            fullCalendarDay: WeekDay.short,
-            selectedDateColor: Colors.white,
-            dateColor: Colors.black,
-            locale: 'en',
+          IconButton(
+            onPressed: _previousWeek,
+            icon: const Icon(Icons.chevron_left),
+            color: Colors.grey[600],
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _weekDates.length,
+              itemBuilder: (context, index) {
+                final date = _weekDates[index];
+                final isSelected = _selectedDate.day == date.day &&
+                    _selectedDate.month == date.month &&
+                    _selectedDate.year == date.year;
 
-            initialDate: DateTime.now(),
-            calendarEventColor: TColor.primaryColor2,
-            firstDate: DateTime.now().subtract(const Duration(days: 140)),
-            lastDate: DateTime.now().add(const Duration(days: 60)),
+                return _buildDateItem(date, isSelected);
+              },
+            ),
+          ),
+          IconButton(
+            onPressed: _nextWeek,
+            icon: const Icon(Icons.chevron_right),
+            color: Colors.grey[600],
+          ),
+        ],
+      ),
+    );
+  }
 
-            onDateSelected: (date) {
-              _selectedDateAppBBar = date;
-            },
-            selectedDayLogo: Container(
-              width: double.maxFinite,
-              height: double.maxFinite,
+  Widget _buildDateItem(DateTime date, bool isSelected) {
+    final dayName = DateFormat('E').format(date).substring(0, 3);
+    final dayNumber = date.day.toString();
+
+    return GestureDetector(
+      onTap: () => _selectDate(date),
+      child: Container(
+        width: 65,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? TColor.secondaryColor2
+              : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              dayName,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              dayNumber,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : Colors.grey[800],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildCalendarIcon(),
+          const SizedBox(height: 30),
+          Text(
+            'There is nothing scheduled',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Try adding new meal plans',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarIcon() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 3,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Calendar icon
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.pink[50],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 1,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: TColor.secondaryColor2,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: index == 5
+                              ? TColor.secondaryColor2
+                              : TColor.secondaryColor2.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Add button
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: TColor.primaryG,
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter),
-                borderRadius: BorderRadius.circular(10.0),
+                color: Colors.teal,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.teal.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 24,
               ),
             ),
           ),
-          Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "BreakFast",
-                            style: TextStyle(
-                                color: TColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              "${breakfastArr.length} Items | 230 calories",
-                              style: TextStyle(color: TColor.gray, fontSize: 12),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: breakfastArr.length,
-                        itemBuilder: (context, index) {
-                          var mObj = breakfastArr[index] as Map? ?? {};
-                          return MealFoodScheduleRow(
-                            mObj: mObj,
-                            index: index,
-                          );
-                        }),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Lunch",
-                            style: TextStyle(
-                                color: TColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              "${lunchArr.length} Items | 500 calories",
-                              style: TextStyle(color: TColor.gray, fontSize: 12),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: lunchArr.length,
-                        itemBuilder: (context, index) {
-                          var mObj = lunchArr[index] as Map? ?? {};
-                          return MealFoodScheduleRow(
-                            mObj: mObj,
-                            index: index,
-                          );
-                        }),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Snacks",
-                            style: TextStyle(
-                                color: TColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              "${snacksArr.length} Items | 140 calories",
-                              style: TextStyle(color: TColor.gray, fontSize: 12),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: snacksArr.length,
-                        itemBuilder: (context, index) {
-                          var mObj = snacksArr[index] as Map? ?? {};
-                          return MealFoodScheduleRow(
-                            mObj: mObj,
-                            index: index,
-                          );
-                        }),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Dinner",
-                            style: TextStyle(
-                                color: TColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              "${dinnerArr.length} Items | 120 calories",
-                              style: TextStyle(color: TColor.gray, fontSize: 12),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: dinnerArr.length,
-                        itemBuilder: (context, index) {
-                          var mObj = dinnerArr[index] as Map? ?? {};
-                          return MealFoodScheduleRow(
-                            mObj: mObj,
-                            index: index,
-                          );
-                        }),
-                    SizedBox(
-                      height: media.width * 0.05,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Today Meal Nutritions",
-                            style: TextStyle(
-                                color: TColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: nutritionArr.length,
-                        itemBuilder: (context, index) {
-                          var nObj = nutritionArr[index] as Map? ?? {};
-
-                          return NutritionRow(
-                            nObj: nObj,
-                          );
-                        }),
-                    SizedBox(
-                      height: media.width * 0.05,
-                    )
-                  ],
-                ),
-              ))
         ],
       ),
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MealTrackerForm(),
+          ),
+        ).then((_) => _fetchMeals()); // Refresh meals when returned
+      },
+      backgroundColor: TColor.secondaryColor2,
+      child: const Icon(
+        Icons.add,
+        color: Colors.white,
+        size: 28,
+      ),
+    );
+  }
+
+  Widget _buildMealList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _meals.length,
+      itemBuilder: (context, index) {
+        final meal = _meals[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  meal.mealType,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: TColor.secondaryColor2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  DateFormat('yyyy-MM-dd – HH:mm').format(meal.dateTime),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+                ...meal.foodItems.map((item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    '${item.name} — ${item.calories} cal × ${item.quantity}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                )),
+                const SizedBox(height: 12),
+                Text(
+                  'Total Calories: ${meal.totalCalories}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

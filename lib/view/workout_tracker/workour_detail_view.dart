@@ -1,5 +1,6 @@
 import 'package:strideup_fitness_app/common_widget/exercises_set_section.dart';
 import 'package:strideup_fitness_app/view/workout_tracker/exercises_stpe_details.dart';
+import 'package:strideup_fitness_app/view/workout_tracker/workout_timer_screen.dart';
 
 import '../../common/colo_extension.dart';
 import '../../common_widget/icon_title_next_row.dart';
@@ -363,7 +364,24 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      RoundButton(title: "Start Workout", onPressed: () {})
+                      RoundButton(
+                        title: "Start Workout",
+                        onPressed: () {
+                          List<String> exercises = [
+                            "Jumping Jack",
+                            "Skipping",
+                            "Squats",
+                            "Arm Raises"
+                          ];
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkoutTimerScreen(exerciseNames: exercises),
+                            ),
+                          );
+                        },
+                      )
+
                     ],
                   ),
                 )

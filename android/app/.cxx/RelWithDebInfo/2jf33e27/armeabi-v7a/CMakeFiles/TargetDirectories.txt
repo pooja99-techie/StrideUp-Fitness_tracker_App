@@ -1,0 +1,2 @@
+D:/Major Project - Copy/android/app/.cxx/RelWithDebInfo/2jf33e27/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Major Project - Copy/android/app/.cxx/RelWithDebInfo/2jf33e27/armeabi-v7a/CMakeFiles/rebuild_cache.dir

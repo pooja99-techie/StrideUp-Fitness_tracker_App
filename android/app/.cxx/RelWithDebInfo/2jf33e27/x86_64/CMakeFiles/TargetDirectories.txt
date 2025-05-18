@@ -1,0 +1,2 @@
+D:/Major Project - Copy/android/app/.cxx/RelWithDebInfo/2jf33e27/x86_64/CMakeFiles/edit_cache.dir
+D:/Major Project - Copy/android/app/.cxx/RelWithDebInfo/2jf33e27/x86_64/CMakeFiles/rebuild_cache.dir

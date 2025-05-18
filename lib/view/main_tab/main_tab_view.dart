@@ -2,6 +2,9 @@ import 'package:strideup_fitness_app/common/colo_extension.dart';
 import 'package:strideup_fitness_app/common_widget/tab_button.dart';
 import 'package:flutter/material.dart';
 import 'package:strideup_fitness_app/view/meal_planner/meal_planner_view.dart';
+import 'package:strideup_fitness_app/view/meal_planner/meal_schedule_view.dart';
+import 'package:strideup_fitness_app/view/step_tracker/step_tracker_screen.dart';
+import 'package:strideup_fitness_app/view/water_intake/water_ui.dart';
 import 'package:strideup_fitness_app/view/workout_tracker/workout_tracker_view.dart';
 
 import '../home/home_view.dart';
@@ -44,12 +47,12 @@ class _MainTabViewState extends State<MainTabView> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               TabButton(
-                icon: "assets/img/home_tab.png",
-                selectIcon: "assets/img/home_tab_select.png",
+                icon: "assets/img/water_drop.png",
+                selectIcon: "assets/img/drop.png",
                 isActive: selectTab == 0,
                 onTap: () {
                   selectTab = 0;
-                  currentTab = const HomeView();
+                  currentTab = const WaterTrackingScreen();
                   if (mounted) setState(() {});
                 },
               ),
@@ -64,12 +67,12 @@ class _MainTabViewState extends State<MainTabView> {
                 },
               ),
               TabButton(
-                icon: "assets/img/camera_tab.png",
-                selectIcon: "assets/img/camera_tab_select.png",
+                icon: "assets/img/tray.png",
+                selectIcon: "assets/img/tray_selected.png",
                 isActive: selectTab == 2,
                 onTap: () {
                   selectTab = 2;
-                  currentTab = const MealPlannerView();
+                  currentTab = const MealScheduleView();
                   if (mounted) setState(() {});
                 },
               ),

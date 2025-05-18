@@ -54,6 +54,14 @@ dependencies:
   firebase_auth: ^5.5.3
   cloud_firestore: ^5.6.7
 
+
+#for steps count
+#  pedometer: ^3.0.0
+#  permission_handler: ^10.2.0
+#  shared_preferences: ^2.1.0
+
+  #for voice
+  flutter_tts: ^4.2.2
   # dependencies_overrides:
   #   intl: ^0.18.1
 
@@ -68,6 +76,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+    android: true
+    ios: true
+    image_path: "assets/img/icon/img.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

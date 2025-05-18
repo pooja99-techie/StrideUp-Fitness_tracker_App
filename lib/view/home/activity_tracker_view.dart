@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../common/colo_extension.dart';
 import '../../common_widget/latest_activity_row.dart';
 import '../../common_widget/today_target_cell.dart';
+import '../../services/daily_target_firestore_service.dart';
 
 class ActivityTrackerView extends StatefulWidget {
   const ActivityTrackerView({super.key});
@@ -14,6 +15,18 @@ class ActivityTrackerView extends StatefulWidget {
 
 class _ActivityTrackerViewState extends State<ActivityTrackerView> {
   int touchedIndex = -1;
+
+  // Instantiate the DailyTargetFirestoreService
+  final DailyTargetFirestoreService _targetService = DailyTargetFirestoreService();
+
+  // State variables to hold the current day's targets with initial default values
+  // These will be updated once data is loaded from Firestore
+  int _waterTarget = 8000; // Default in ml
+  int _stepsTarget = 2400; // Default steps
+
+  // Variables to hold input from the dialog using TextEditingControllers
+  final TextEditingController _waterController = TextEditingController();
+  final TextEditingController _stepsController = TextEditingController();
 
   List latestArr = [
     {
@@ -26,7 +39,160 @@ class _ActivityTrackerViewState extends State<ActivityTrackerView> {
       "title": "Eat Snack (Fitbar)",
       "time": "About 3 hours ago"
     },
+    // Add more dummy data or replace with real data later
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Load today's targets from Firestore when the screen initializes
+    _loadDailyTargets();
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controllers when the widget is disposed
+    _waterController.dispose();
+    _stepsController.dispose();
+    super.dispose();
+  }
+
+  // --- Loading Function (calls the service) ---
+  void _loadDailyTargets() async {
+    try {
+      final targets = await _targetService.loadDailyTargets();
+      if (targets != null) {
+        // Update state if targets were loaded successfully from Firestore
+        setState(() {
+          // Use loaded values, falling back to defaults if Firestore values are null
+          _waterTarget = targets['waterTarget'] ?? 8000;
+          _stepsTarget = targets['stepsTarget'] ?? 2400;
+          // Note: We are only loading targets here.
+          // Achieved amounts might be loaded separately or from a stream later if needed here.
+        });
+      }
+      // If targets is null, it means no data was found in Firestore for today or user not logged in.
+      // In this case, state remains at the initial default values (8000ml, 2400 steps).
+      print("Load Daily Targets completed. Current state: Water: $_waterTarget ml, Steps: $_stepsTarget");
+    } catch (e) {
+      print("Failed to load daily targets in ActivityTrackerView UI: $e");
+      // Optionally show a snackbar or other error indicator to the user
+      if (mounted) { // Check if the widget is still in the tree
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load daily targets: ${e.toString()}'))
+        );
+      }
+    }
+  }
+
+  // --- Dialog Function to show input form ---
+  void _showSetTargetDialog() {
+    // Pre-fill controllers with current targets for convenience when the dialog opens
+    _waterController.text = _waterTarget.toString();
+    _stepsController.text = _stepsTarget.toString();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Set Today's Target"),
+          content: SingleChildScrollView( // Use SingleChildScrollView for smaller screens/keyboards
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Make the column only take necessary space
+              children: <Widget>[
+                TextField(
+                  controller: _waterController,
+                  keyboardType: TextInputType.number, // Only numeric keyboard
+                  decoration: const InputDecoration(labelText: 'Water Target (ml)'),
+                  // Optional: Add input formatters or validators
+                ),
+                TextField(
+                  controller: _stepsController,
+                  keyboardType: TextInputType.number, // Only numeric keyboard
+                  decoration: const InputDecoration(labelText: 'Steps Target'),
+                  // Optional: Add input formatters or validators
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss the dialog
+                // Optionally clear controllers or reset their text to state values here
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () {
+                // Call the saving function and dismiss the dialog
+                _saveAndDismissDialog();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- Saving Function (parses input, calls the service, and updates UI state) ---
+  void _saveAndDismissDialog() async {
+    // Parse input values from controllers
+    int? waterInput = int.tryParse(_waterController.text);
+    int? stepsInput = int.tryParse(_stepsController.text);
+
+    // Basic validation: Check if parsing was successful and values are non-negative
+    if (waterInput == null || stepsInput == null || waterInput < 0 || stepsInput < 0) {
+      print("Invalid input detected: water=$waterInput, steps=$stepsInput");
+      // Show an error message to the user (e.g., using a SnackBar)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter valid positive numbers for targets.'))
+        );
+        // Don't dismiss the dialog on invalid input
+      }
+      return; // Stop here if input is invalid
+    }
+
+    // Update the state variables immediately with the *new* valid targets
+    // This makes the UI feel more responsive even before the save to Firestore completes
+    setState(() {
+      _waterTarget = waterInput;
+      _stepsTarget = stepsInput;
+    });
+
+    // Dismiss the dialog now that we have valid input and updated the UI state
+    if (mounted) {
+      Navigator.of(context).pop();
+      // Optionally clear controllers after pop
+      // _waterController.clear();
+      // _stepsController.clear();
+    }
+
+
+    try {
+      // Call the service to save the data to Firestore
+      await _targetService.saveDailyTargets(
+        waterTarget: waterInput,
+        stepsTarget: stepsInput,
+      );
+      // If save is successful, the UI was already updated via setState above.
+      print("Targets saved successfully via service.");
+
+    } catch (e) {
+      print("Failed to save daily targets in ActivityTrackerView UI: $e");
+      // Show an error message to the user if saving failed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save targets to cloud: ${e.toString()}'))
+        );
+        // You *might* want to revert the state change here if the save failure
+        // should mean the targets weren't actually set. Depends on UX preference.
+        // E.g., call _loadDailyTargets() again to revert to the last known good state.
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +276,7 @@ class _ActivityTrackerViewState extends State<ActivityTrackerView> {
                               fontSize: 14,
                               fontWeight: FontWeight.w700),
                         ),
+                        // --- Updated "Add" Button ---
                         SizedBox(
                           width: 30,
                           height: 30,
@@ -121,7 +288,10 @@ class _ActivityTrackerViewState extends State<ActivityTrackerView> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: MaterialButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  // Call the function to show the target setting dialog
+                                  _showSetTargetDialog();
+                                },
                                 padding: EdgeInsets.zero,
                                 height: 30,
                                 shape: RoundedRectangleBorder(
@@ -142,13 +312,16 @@ class _ActivityTrackerViewState extends State<ActivityTrackerView> {
                     const SizedBox(
                       height: 15,
                     ),
-                    const Row(
+                    // --- Updated TodayTargetCell widgets to use state variables ---
+                    Row(
                       children: [
                         Expanded(
                           child: TodayTargetCell(
                             icon: "assets/img/water.png",
-                            value: "8L",
-                            title: "Water Intake",
+                            // Display the water target from the state variable.
+                            // Convert from ml to Liters for display and format.
+                            value: "${(_waterTarget / 1000.0).toStringAsFixed(1)}L", // Example: 8000ml -> 8.0L
+                            title: "Water Intake Target", // Changed title slightly for clarity
                           ),
                         ),
                         SizedBox(
@@ -157,8 +330,9 @@ class _ActivityTrackerViewState extends State<ActivityTrackerView> {
                         Expanded(
                           child: TodayTargetCell(
                             icon: "assets/img/foot.png",
-                            value: "2400",
-                            title: "Foot Steps",
+                            // Display the steps target from the state variable
+                            value: "$_stepsTarget",
+                            title: "Foot Steps Target", // Changed title slightly for clarity
                           ),
                         ),
                       ],

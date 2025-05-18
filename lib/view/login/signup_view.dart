@@ -161,7 +161,7 @@ class _SignUpViewState extends State<SignUpView> {
                   hitText: "Password",
                   icon: "assets/img/lock.png",
                   obscureText: true,
-                  rigtIcon: TextButton(
+                  rightIcon: TextButton(
                       onPressed: () {
                         // TODO: Implement show/hide password functionality
                       },
